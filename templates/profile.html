@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+    <div class="profile-container">
+        <h1>Личный кабинет</h1>
+        <h2>Имя: {{ current_user.name }}</h2>
+        <h3>Город: {{ current_user.city }}</h3>
+        <h4>Возраст: {{ current_user.age }}</h4>
+        <h5>Email: {{ current_user.email }}</h5>
+        <h6>Ваши товары</h6>
+        <a href="{{ url_for('add_product') }}" class="btn btn-secondary">Добавить товар</a>
+    </div>
+        {% for item in product %}
+        <div class="col-md6 border rounded">
+            <h2>{{ item.title }}</h2>
+                <div>
+                    {{ item.content }}
+                </div>
+                <div>
+                    {{ item.price }}₽
+                </div>
+                <div>
+                    Дата создания - {{ item.created_date }}
+                </div>
+        </div>
+        {% endfor %}
+{% endblock %}

@@ -5,6 +5,7 @@ from flask import Flask, render_template, redirect, abort, request
 
 from data.product import Product
 from data.users import User
+from forms.balance_form import BalanceForm
 from forms.login_form import LoginForm
 from forms.products import ProductForm
 from forms.user import RegisterForm
@@ -60,6 +61,19 @@ def profile():
     db_sess = db_session.create_session()
     product = db_sess.query(Product)
     return render_template("profile.html", product=product, url="/", name_b="Вернуться на главную")
+
+
+@app.route("/balance", methods=["GET", "POST"])
+@login_required
+def balance():
+    form = BalanceForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        current_user.balance += form.balance.data
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect("/")
+    return render_template("balance.html", form=form)
 
 
 @app.route('/products', methods=['GET', 'POST'])

@@ -4,6 +4,6 @@ from wtforms.fields.simple import SubmitField
 from wtforms.validators import DataRequired
 
 
-class Balance(FlaskForm):
+class BalanceForm(FlaskForm):
     balance = IntegerField('Рубли', validators=[DataRequired()])
     submit = SubmitField('Пополнить баланс')

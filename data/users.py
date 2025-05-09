@@ -22,6 +22,7 @@ class User(SqlAlchemyBase, UserMixin):
     city = sqlalchemy.Column(sqlalchemy.String, nullable=True, default="Канаш")
     role = sqlalchemy.Column(sqlalchemy.String, default="u")
     product = orm.relationship("Product", back_populates='user')
+    balance = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=0.00)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

@@ -24,6 +24,8 @@ def main():
 def index():
     db_sess = db_session.create_session()
     product = db_sess.query(Product)
+    if "AnonymousUserMixin" not in str(current_user):
+        return render_template("index.html", product=product, url="/profile", name_b=current_user.name)
     return render_template("index.html", product=product)
 
 
@@ -57,7 +59,7 @@ def reqister():
 def profile():
     db_sess = db_session.create_session()
     product = db_sess.query(Product)
-    return render_template("profile.html", product=product)
+    return render_template("profile.html", product=product, url="/", name_b="Вернуться на главную")
 
 
 @app.route('/products', methods=['GET', 'POST'])

@@ -5,8 +5,8 @@ from flask import Flask, render_template, redirect, abort, request
 
 from data.product import Product
 from data.users import User
-from forms.balance_form import BalanceForm
-from forms.login_form import LoginForm
+from forms.balance import BalanceForm
+from forms.login import LoginForm
 from forms.products import ProductForm
 from forms.user import RegisterForm
 
@@ -130,11 +130,8 @@ def edit_product(id):
             product.title = form.title.data
             product.content = form.content.data
             product.price = form.price.data
-            product.wtype = form.wtype.data
-            product.weaponry = form.weaponry.data
-            product.building_material = form.building_material.data
-            product.tool = form.tool.data
-            product.used = form.used.data
+            product.parameters = (f"{form.wtype.data} {form.weaponry.data} {form.building_material.data} " +
+                                  f" {form.tool.data} " + f"{form.used.data}")
             db_sess.commit()
             return redirect('/')
         else:
@@ -143,6 +140,21 @@ def edit_product(id):
                            title='Редактирование товара',
                            form=form
                            )
+
+
+@app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def news_delete(id):
+    db_sess = db_session.create_session()
+    news = db_sess.query(Product).filter(Product.id == id,
+                                      Product.user == current_user
+                                      ).first()
+    if news:
+        db_sess.delete(news)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
 
 
 @login_manager.user_loader

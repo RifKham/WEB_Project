@@ -14,9 +14,13 @@ class Product(SqlAlchemyBase):
     content = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     price = sqlalchemy.Column(sqlalchemy.Float, nullable=False)
     rating = sqlalchemy.Column(sqlalchemy.Float, default=0.00)
-    parameters = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.date.today)
+    wtype = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    weaponry = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    building_material = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    tool = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    used = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))

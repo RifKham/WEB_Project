@@ -11,8 +11,8 @@ class ProductForm(FlaskForm):
     price = FloatField("Цена в ₽", validators=[DataRequired()])
     submit = SubmitField('Применить')
     wtype = RadioField('Чем оно является?', choices=[('stick', 'Палка'), ('wood_work', 'Изделие из дерева'),
-                                                    ('bark', 'Кора'), ('wood', 'Древесина')],
-                      validators=[DataRequired()])
+                                                     ('bark', 'Кора'), ('wood', 'Древесина')],
+                       validators=[DataRequired()])
     weaponry = SelectField('Оружие/похоже на оружие', choices=[('no_w', 'Не оружие/не похоже на оружие'),
                                                                ('sword', 'Похоже на меч'), ('bow', 'Лук'),
                                                                ('gun', 'Похоже на огнестрел'),

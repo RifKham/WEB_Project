@@ -16,6 +16,7 @@ class Product(SqlAlchemyBase):
     rating = sqlalchemy.Column(sqlalchemy.Float, default=0.00)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.date.today)
+    quantity = sqlalchemy.Column(sqlalchemy.Integer)
     wtype = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     weaponry = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     building_material = sqlalchemy.Column(sqlalchemy.String, nullable=True)

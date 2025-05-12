@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField
 from wtforms import SubmitField, FloatField, BooleanField
 from wtforms.fields.choices import SelectField, RadioField
+from wtforms.fields.numeric import IntegerField
 from wtforms.validators import DataRequired
 
 
@@ -9,6 +10,7 @@ class ProductForm(FlaskForm):
     title = StringField('Название', validators=[DataRequired()])
     content = TextAreaField("Описание")
     price = FloatField("Цена в ₽", validators=[DataRequired()])
+    quantity = IntegerField("Количество", validators=[DataRequired()])
     submit = SubmitField('Применить')
     wtype = RadioField('Чем оно является?', choices=[('stick', 'Палка'), ('wood_work', 'Изделие из дерева'),
                                                      ('bark', 'Кора'), ('wood', 'Древесина')],

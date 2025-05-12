@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms import SubmitField
+from wtforms.fields.numeric import IntegerField
+from wtforms.validators import DataRequired
 
 
 class PurchaseForm(FlaskForm):
-    quantity = StringField('Количество', validators=[DataRequired(), NumberRange(min=1, max=100)])
+    quantity = IntegerField("Количество", validators=[DataRequired()])
     submit = SubmitField('Добавить в корзину')

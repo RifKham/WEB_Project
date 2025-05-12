@@ -3,11 +3,13 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data import db_session
 from flask import Flask, render_template, redirect, abort, request
 
+from data.basket import Basket
 from data.product import Product
 from data.users import User
 from forms.balance import BalanceForm
 from forms.login import LoginForm
 from forms.products import ProductForm
+from forms.purchase import PurchaseForm
 from forms.user import RegisterForm
 
 app = Flask(__name__)
@@ -63,6 +65,60 @@ def profile():
     return render_template("profile.html", product=product, url="/", name_b="Вернуться на главную")
 
 
+@app.route("/purchase/<int:id>", methods=['GET', 'POST'])
+def purchase(id):
+    form = PurchaseForm()
+    db_sess = db_session.create_session()
+    basket = db_sess.query(Basket).filter(Basket.user == current_user).first()
+    product = db_sess.query(Product).filter(Product.id == id).first()
+    if basket:
+        if form.validate_on_submit():
+            basket.products_id += " " + str(id)
+            if product.quantity < form.quantity.data:
+                basket.quantity = " " + str(product.quantity)
+            else:
+                basket.quantity += " " + str(form.quantity.data)
+            basket.price += product.price
+            db_sess.merge(basket)
+            db_sess.commit()
+            return redirect("/")
+    else:
+        if form.validate_on_submit():
+            basket = Basket()
+            basket.user_id = current_user.id
+            basket.products_id = str(id)
+            if product.quantity < form.quantity.data:
+                basket.quantity = str(product.quantity)
+            else:
+                basket.quantity = str(form.quantity.data)
+            basket.price = product.price
+            db_sess.merge(basket)
+            db_sess.commit()
+            return redirect("/")
+    return render_template("purchase.html", form=form, product=product)
+
+
+@app.route("/basket", methods=['GET', 'POST'])
+def basket():
+    pass
+
+
+# @app.route("/basket/<int:id>", methods=['GET', 'POST'])
+# def order_delete(id):
+    # db_sess = db_session.create_session()
+    # basket = db_sess.query(Basket).filter(Basket.user == current_user).first()
+    # product = db_sess.query(Product).filter(Product.id == id).first()
+    # if product:
+        # b = basket.products_id.split()
+        # b.remove(b[b.index(str(id))])
+        # basket.products_id = " ".join(b)
+        # db_sess.merge(basket)
+        # db_sess.commit()
+    # else:
+        # abort(404)
+    # return redirect('/')
+
+
 @app.route("/balance", methods=["GET", "POST"])
 @login_required
 def balance():
@@ -86,6 +142,7 @@ def add_product():
         product.title = form.title.data
         product.content = form.content.data
         product.price = form.price.data
+        product.quantity = form.quantity.data
         product.wtype = form.wtype.data
         product.weaponry = form.weaponry.data
         product.building_material = form.building_material.data
@@ -113,12 +170,12 @@ def edit_product(id):
             form.title.data = product.title
             form.content.data = product.content
             form.price.data = product.price
+            form.quantity.data = product.quantity
             form.wtype.data = product.wtype
             form.weaponry.data = product.weaponry
             form.building_material.data = product.building_material
             form.tool.data = product.tool
             form.used.data = product.used
-
         else:
             abort(404)
     if form.validate_on_submit():
@@ -130,8 +187,12 @@ def edit_product(id):
             product.title = form.title.data
             product.content = form.content.data
             product.price = form.price.data
-            product.parameters = (f"{form.wtype.data} {form.weaponry.data} {form.building_material.data} " +
-                                  f" {form.tool.data} " + f"{form.used.data}")
+            product.quantity = form.quantity.data
+            product.wtype = form.wtype.data
+            product.weaponry = form.weaponry.data
+            product.building_material = form.building_material.data
+            product.tool = form.tool.data
+            product.used = form.used.data
             db_sess.commit()
             return redirect('/')
         else:
@@ -142,15 +203,15 @@ def edit_product(id):
                            )
 
 
-@app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
+@app.route('/products_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
-def news_delete(id):
+def product_delete(id):
     db_sess = db_session.create_session()
-    news = db_sess.query(Product).filter(Product.id == id,
-                                      Product.user == current_user
-                                      ).first()
-    if news:
-        db_sess.delete(news)
+    product = db_sess.query(Product).filter(Product.id == id,
+                                            Product.user == current_user
+                                            ).first()
+    if product:
+        db_sess.delete(product)
         db_sess.commit()
     else:
         abort(404)

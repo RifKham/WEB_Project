@@ -14,6 +14,7 @@
     </div>
         {% for item in product %}
         <div class="col-md6 border rounded">
+            {% if current_user == item.user %}
             <h2>{{ item.title }}</h2>
                 <div>
                     {{ item.content }}
@@ -25,12 +26,11 @@
                     Дата создания - {{ item.created_date }}
                 </div>
         </div>
-{% if current_user == item.user %}
     <div>
-        <a href="/news/{{ item.id }}" class="btn btn-warning">
+        <a href="/products/{{ item.id }}" class="btn btn-warning">
             Изменить
         </a>
-        <a href="/news_delete/{{ item.id }}" class="btn btn-danger">
+        <a href="/products_delete/{{ item.id }}" class="btn btn-danger">
             Удалить
         </a>
     </div>

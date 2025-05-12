@@ -5,7 +5,7 @@ from .db_session import SqlAlchemyBase
 
 
 class Basket(SqlAlchemyBase):
-    __tablename__ = 'product'
+    __tablename__ = 'basket'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)

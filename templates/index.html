@@ -12,8 +12,15 @@
         {{item.price}}₽
     </div>
     <div>
-        Продавец - {{item.user.name}}, Дата создания - {{item.created_date}}
+        Продавец - {{item.user.name}}, Дата создания - {{item.created_date}}, Количество: {{item.quantity}}
     </div>
+    {% if item.quantity != 0 %}
+    <div>
+        <a href="/purchase/{{ item.id }}" class="btn btn-primary">
+            Купить
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endfor %}
 {% endblock %}

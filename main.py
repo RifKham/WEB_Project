@@ -4,12 +4,13 @@ from data import db_session
 from flask import Flask, render_template, redirect, abort, request
 
 from data.basket import Basket
+from data.basket_item import BasketItem
 from data.product import Product
 from data.users import User
 from forms.balance import BalanceForm
 from forms.login import LoginForm
 from forms.products import ProductForm
-from forms.purchase import PurchaseForm
+from forms.quantity import QuantityForm
 from forms.user import RegisterForm
 
 app = Flask(__name__)
@@ -66,41 +67,89 @@ def profile():
 
 
 @app.route("/purchase/<int:id>", methods=['GET', 'POST'])
+@login_required
 def purchase(id):
-    form = PurchaseForm()
     db_sess = db_session.create_session()
     basket = db_sess.query(Basket).filter(Basket.user == current_user).first()
-    product = db_sess.query(Product).filter(Product.id == id).first()
-    if basket:
-        if form.validate_on_submit():
-            basket.products_id += " " + str(id)
-            if product.quantity < form.quantity.data:
-                basket.quantity = " " + str(product.quantity)
-            else:
-                basket.quantity += " " + str(form.quantity.data)
-            basket.price += product.price
-            db_sess.merge(basket)
-            db_sess.commit()
-            return redirect("/")
+    if not basket:
+        basket = Basket()
+        basket.user_id = current_user.id
+    b_item = db_sess.query(BasketItem).filter(BasketItem.product_id == id).first()
+    if not b_item:
+        b_item = BasketItem()
+        b_item.product_id = id
+        b_item.basket_id = basket.id
+        basket.basket_items.append(b_item)
+        db_sess.merge(basket)
+        db_sess.commit()
     else:
-        if form.validate_on_submit():
-            basket = Basket()
-            basket.user_id = current_user.id
-            basket.products_id = str(id)
-            if product.quantity < form.quantity.data:
-                basket.quantity = str(product.quantity)
-            else:
-                basket.quantity = str(form.quantity.data)
-            basket.price = product.price
-            db_sess.merge(basket)
-            db_sess.commit()
-            return redirect("/")
-    return render_template("purchase.html", form=form, product=product)
+        b_item.quantity += 1
+        db_sess.merge(b_item)
+        db_sess.commit()
+    return redirect("/")
 
 
 @app.route("/basket", methods=['GET', 'POST'])
+@login_required
 def basket():
-    pass
+    db_sess = db_session.create_session()
+    basket = db_sess.query(Basket).filter(Basket.user_id == current_user.id).first()
+    if basket:
+        b_items = db_sess.query(BasketItem).filter(BasketItem.basket_id == basket.id).all()
+        t_price = 0
+        t_quantity = 0
+        for item in b_items:
+            t_price += item.product.price * item.quantity
+            t_quantity += item.quantity
+        return render_template("basket.html", basket_items=b_items, basket=basket,
+                                t_price=t_price, t_quantity=t_quantity)
+    else:
+        return render_template("basket.html", basket=basket)
+
+
+@app.route("/quantity/<int:item_id>", methods=['GET', 'POST'])
+@login_required
+def quantity(item_id):
+    form = QuantityForm()
+    db_sess = db_session.create_session()
+    basket_item = db_sess.query(BasketItem).filter(BasketItem.product_id == item_id).first()
+    product = db_sess.query(Product).filter(basket_item.product_id == Product.id).first()
+    if basket_item:
+        if form.validate_on_submit():
+            if form.quantity.data > product.quantity:
+                basket_item.quantity = product.quantity
+            elif form.quantity.data <= 0:
+                basket_item.quantity = 1
+            else:
+                basket_item.quantity = form.quantity.data
+            db_sess.merge(basket_item)
+            db_sess.commit()
+            return redirect("/basket")
+    else:
+        abort(404)
+    return render_template("quantity.html", form=form)
+
+
+@app.route("/buy", methods=['GET', 'POST'])
+@login_required
+def buy():
+    db_sess = db_session.create_session()
+    basket = db_sess.query(Basket).filter(Basket.user == current_user).first()
+    basket_item = db_sess.query(BasketItem).filter(basket.user == current_user).all()
+    if basket_item:
+        for i in basket_item:
+            product = db_sess.query(Product).filter(i.product_id == Product.id).first()
+            if i.quantity * product.price <= current_user.balance:
+                current_user.balance -= i.quantity * product.price
+            else:
+                return redirect("/balance")
+        for j in basket_item:
+            db_sess.delete(j)
+        db_sess.delete(basket)
+        db_sess.commit()
+        return redirect("/")
+    return redirect("/")
+
 
 
 # @app.route("/basket/<int:id>", methods=['GET', 'POST'])

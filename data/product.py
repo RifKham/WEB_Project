@@ -1,9 +1,7 @@
-import datetime
 import sqlalchemy
 from sqlalchemy import orm
 
 from .db_session import SqlAlchemyBase
-
 
 class Product(SqlAlchemyBase):
     __tablename__ = 'product'
@@ -14,8 +12,6 @@ class Product(SqlAlchemyBase):
     content = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     price = sqlalchemy.Column(sqlalchemy.Float, nullable=False)
     rating = sqlalchemy.Column(sqlalchemy.Float, default=0.00)
-    created_date = sqlalchemy.Column(sqlalchemy.DateTime,
-                                     default=datetime.date.today)
     quantity = sqlalchemy.Column(sqlalchemy.Integer)
     wtype = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     weaponry = sqlalchemy.Column(sqlalchemy.String, nullable=True)

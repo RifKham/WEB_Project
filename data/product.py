@@ -3,6 +3,7 @@ from sqlalchemy import orm
 
 from .db_session import SqlAlchemyBase
 
+
 class Product(SqlAlchemyBase):
     __tablename__ = 'product'
 
@@ -18,7 +19,7 @@ class Product(SqlAlchemyBase):
     building_material = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     tool = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     used = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))
-    user = orm.relationship('User')
+    user = orm.relationship('User', back_populates='product')
+    comments = orm.relationship('Comment', back_populates='product')

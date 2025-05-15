@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ product.title }}</h1>
+<p>{{ product.content }}</p>
+
+<h1>Добавить отзыв</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.rate.label }}<br>
+        {{ form.rate(class="form-control", type="number") }}<br>
+        {% for error in form.rate.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.content.label }}<br>
+        {{ form.content(class="form-control", type="string") }}<br>
+        {% for error in form.content.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    {{ form.submit(class="btn btn-primary") }}
+</form>
+{% endblock %}

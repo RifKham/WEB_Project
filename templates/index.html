@@ -14,10 +14,13 @@
     <div>
         Продавец - {{item.user.name}}, Количество: {{item.quantity}}
     </div>
-    {% if item.quantity != 0 %}
+    {% if item.quantity != 0 and current_user.id != item.user_id%}
     <div>
         <a href="/purchase/{{ item.id }}" class="btn btn-primary">
             Купить
+        </a>
+        <a href="/comments/{{ item.id }}" class="btn btn-light">
+            Отзывы
         </a>
     </div>
     {% endif %}

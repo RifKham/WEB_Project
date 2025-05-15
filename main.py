@@ -5,9 +5,11 @@ from flask import Flask, render_template, redirect, abort, request
 
 from data.basket import Basket
 from data.basket_item import BasketItem
+from data.comments import Comment
 from data.product import Product
 from data.users import User
 from forms.balance import BalanceForm
+from forms.comment import CommentForm
 from forms.login import LoginForm
 from forms.products import ProductForm
 from forms.quantity import QuantityForm
@@ -75,17 +77,23 @@ def purchase(id):
         basket = Basket()
         basket.user_id = current_user.id
     b_item = db_sess.query(BasketItem).filter(BasketItem.product_id == id).first()
-    if not b_item:
-        b_item = BasketItem()
-        b_item.product_id = id
-        b_item.basket_id = basket.id
-        basket.basket_items.append(b_item)
-        db_sess.merge(basket)
-        db_sess.commit()
+    product = db_sess.query(Product).filter(Product.id == id).first()
+    if product:
+        if not b_item:
+            b_item = BasketItem()
+            b_item.product_id = id
+            b_item.basket_id = basket.id
+            basket.basket_items.append(b_item)
+            product.quantity -= 1
+            db_sess.merge(basket)
+            db_sess.commit()
+        else:
+            b_item.quantity += 1
+            db_sess.merge(b_item)
+            product.quantity -= 1
+            db_sess.commit()
     else:
-        b_item.quantity += 1
-        db_sess.merge(b_item)
-        db_sess.commit()
+        abort(404)
     return redirect("/")
 
 
@@ -122,6 +130,7 @@ def quantity(item_id):
                 basket_item.quantity = 1
             else:
                 basket_item.quantity = form.quantity.data
+            product.quantity -= basket_item.qantity
             db_sess.merge(basket_item)
             db_sess.commit()
             return redirect("/basket")
@@ -140,11 +149,15 @@ def buy():
         for i in basket_item:
             product = db_sess.query(Product).filter(i.product_id == Product.id).first()
             if i.quantity * product.price <= current_user.balance:
+                user = db_sess.query(User).filter(product.user_id == User.id).first()
                 current_user.balance -= i.quantity * product.price
+                user.balance += i.quantity * product.price
+                db_sess.merge(user)
             else:
                 return redirect("/balance")
         for j in basket_item:
             db_sess.delete(j)
+        db_sess.merge(current_user)
         db_sess.delete(basket)
         db_sess.commit()
         return redirect("/")
@@ -178,7 +191,7 @@ def balance():
         db_sess.merge(current_user)
         db_sess.commit()
         return redirect("/")
-    return render_template("balance.html", form=form)
+    return render_template("balance.html", form=form, name_b="Вернуться на главную", url="/")
 
 
 @app.route('/products', methods=['GET', 'POST'])
@@ -204,6 +217,36 @@ def add_product():
         return redirect('/profile')
     return render_template('product.html', title='Добавление новости',
                            form=form)
+
+
+@app.route('/comment/<int:id>', methods=['GET', 'POST'])
+@login_required
+def add_comment(id):
+    form = CommentForm()
+    db_sess = db_session.create_session()
+    product = db_sess.query(Product).get(id)
+    if not product:
+        abort(404)
+    if form.validate_on_submit():
+        comment = Comment()
+        comment.user_id = current_user.id
+        comment.product_id = product.id
+        comment.rate = int(form.rate.data)
+        comment.content = form.content.data
+        db_sess.add(comment)
+        db_sess.commit()
+        return redirect("/")
+    return render_template('comment.html', form=form, product=product,
+                           name_b="Вернуться на главную", url="/")
+
+
+@app.route('/comments/<int:item_id>')
+def comment(item_id):
+    db_sess = db_session.create_session()
+    comments = db_sess.query(Comment).filter(Comment.product_id == item_id).all()
+    product = db_sess.query(Product).filter(Product.id == item_id).first()
+    return render_template("comments.html", comments=comments,
+                           product=product, name_b="Вернуться на главную", url="/")
 
 
 @app.route('/products/<int:id>', methods=['GET', 'POST'])

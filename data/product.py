@@ -21,5 +21,14 @@ class Product(SqlAlchemyBase):
     used = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))
+    image_path = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     user = orm.relationship('User', back_populates='product')
     comments = orm.relationship('Comment', back_populates='product')
+
+    def calculate_rating(self):  # Метод для пересчета рейтинга
+        if not self.comments:
+            self.rating = 0.00  # Если нет отзывов, рейтинг равен 0
+            return
+
+        total_rating = sum(comment.rate for comment in self.comments)
+        self.rating = float(total_rating) / len(self.comments)

@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>Добавление товара</h1>
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <div class="form-group">
         {{ form.title.label }}<br>
@@ -85,11 +85,13 @@
         {{ form.tool.label(class="form-check-label") }}
     </div>
 
-    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-    {% if message %}
-        <div class="alert alert-success" role="alert">
-            {{ message }}
+    {{ form.image.label }}
+    {{ form.image(class="form-control-file") }}
+    {% for error in form.image.errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
         </div>
-    {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Добавить товар</button>
 </form>
 {% endblock %}

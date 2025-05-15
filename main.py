@@ -1,7 +1,13 @@
+import os
+
+from data.banned import BannedEmail
+from db_config import create_admin_user
+
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from werkzeug.utils import secure_filename
 
 from data import db_session
-from flask import Flask, render_template, redirect, abort, request
+from flask import Flask, render_template, redirect, abort, request, current_app
 
 from data.basket import Basket
 from data.basket_item import BasketItem
@@ -9,6 +15,7 @@ from data.comments import Comment
 from data.product import Product
 from data.users import User
 from forms.balance import BalanceForm
+from forms.ban import BanForm
 from forms.comment import CommentForm
 from forms.login import LoginForm
 from forms.products import ProductForm
@@ -19,10 +26,21 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def main():
     db_session.global_init("db/products.sqlite")
+    db_sess = db_session.create_session()
+    if not db_sess.query(User).first():
+        create_admin_user()
     app.run()
 
 
@@ -48,6 +66,10 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
+        if db_sess.query(BannedEmail).filter(BannedEmail.email == form.email.data).first():
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Вы забанены на сайте")
         user = User(
             name=form.name.data,
             email=form.email.data,
@@ -95,6 +117,47 @@ def purchase(id):
     else:
         abort(404)
     return redirect("/")
+
+
+@app.route("/ban/<int:item_id>", methods=['GET', 'POST'])
+@login_required
+def ban(item_id):
+    if current_user.role == "a":
+        form = BanForm()
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == item_id).first()
+        if user and user != current_user and current_user.role == "a":
+            if form.validate_on_submit():
+                print(form.password_for_ban.data)
+                if form.password_for_ban.data != "123ban":
+                    return render_template('ban.html', title='Забанить пользователя',
+                                           form=form,
+                                           message="Вы ввели код неправильно")
+                else:
+                    ban = BannedEmail()
+                    ban.email = user.email
+                    ban.reason = form.reason.data
+                    db_sess.delete(user)
+                    db_sess.add(ban)
+                    db_sess.commit()
+                    return redirect("/")
+        else:
+            abort(404)
+        return render_template('ban.html', user=user, form=form, title="Забанить пользователя", url="/",
+                               name_b="Вернутся на главную")
+    else:
+        abort(404)
+
+
+@app.route("/admin", methods=['GET', 'POST'])
+@login_required
+def admin():
+    if current_user.role == "a":
+        db_sess = db_session.create_session()
+        users = db_sess.query(User).filter(User.id != 1).all()
+        return render_template("admin.html", users=users, url="/profile", name_b="Вернуться в профиль")
+    else:
+        abort(404)
 
 
 @app.route("/basket", methods=['GET', 'POST'])
@@ -201,6 +264,7 @@ def add_product():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         product = Product()
+
         product.title = form.title.data
         product.content = form.content.data
         product.price = form.price.data
@@ -210,13 +274,18 @@ def add_product():
         product.building_material = form.building_material.data
         product.tool = form.tool.data
         product.used = form.used.data
-
-        current_user.product.append(product)
-        db_sess.merge(current_user)
+        product.user_id = current_user.id
+        if form.image.data:
+            image = form.image.data
+            if image and allowed_file(image.filename):
+                filename = secure_filename(image.filename)
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                image.save(filepath)
+                product.image_path = 'images/' + filename
+        db_sess.add(product)
         db_sess.commit()
         return redirect('/profile')
-    return render_template('product.html', title='Добавление новости',
-                           form=form)
+    return render_template('product.html', title='Добавление товара', form=form)
 
 
 @app.route('/comment/<int:id>', methods=['GET', 'POST'])
@@ -225,6 +294,10 @@ def add_comment(id):
     form = CommentForm()
     db_sess = db_session.create_session()
     product = db_sess.query(Product).get(id)
+    comment = db_sess.query(Comment).filter(Comment.product_id == id).first()
+    if comment:
+        db_sess.delete(comment)
+        db_sess.commit()
     if not product:
         abort(404)
     if form.validate_on_submit():
@@ -235,9 +308,24 @@ def add_comment(id):
         comment.content = form.content.data
         db_sess.add(comment)
         db_sess.commit()
+        product.calculate_rating()
+        db_sess.commit()
         return redirect("/")
     return render_template('comment.html', form=form, product=product,
                            name_b="Вернуться на главную", url="/")
+
+
+@app.route('/comment_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def comment_delete(id):
+    db_sess = db_session.create_session()
+    comment = db_sess.query(Comment).filter(Comment.id == id).first()
+    if comment:
+        db_sess.delete(comment)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/comments')
 
 
 @app.route('/comments/<int:item_id>')

@@ -2,28 +2,39 @@
 
 {% block content %}
 <h1>Товары</h1>
-{% for item in product%}
-<div class="col-md6 border rounded">
-    <h2>{{item.title}}</h2>
-    <div>
-        {{item.content}}
-    </div>
-    <div>
-        {{item.price}}₽
-    </div>
-    <div>
-        Продавец - {{item.user.name}}, Количество: {{item.quantity}}
-    </div>
-    {% if item.quantity != 0 and current_user.id != item.user_id%}
-    <div>
-        <a href="/purchase/{{ item.id }}" class="btn btn-primary">
-            Купить
+{% for item in product %}
+    <div class="col-md6 border rounded">
+        <h2>{{ item.title }}</h2>
+        {% if item.image_path %}
+            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.title }}" width="200">
+        {% endif %}
+        <div>
+            Описание: {{ item.content }}
+        </div>
+        <div>
+            Оценка: {{ item.rating }}
+        </div>
+        <div>
+            {{ item.price }}₽
+        </div>
+        <div>
+            Продавец - {{ item.user.name }}, Количество: {{ item.quantity }}
+        </div>
+        {% if item.quantity != 0 and current_user.id != item.user_id %}
+            <div>
+                <a href="/purchase/{{ item.id }}" class="btn btn-primary">
+                    Купить
+                </a>
+                <a href="/comments/{{ item.id }}" class="btn btn-light">
+                    Отзывы
+                </a>
+            </div>
+        {% endif %}
+        {% if current_user.role == "a" %}
+            <a href="/products_delete/{{ item.id }}" class="btn btn-danger">
+            Удалить
         </a>
-        <a href="/comments/{{ item.id }}" class="btn btn-light">
-            Отзывы
-        </a>
+        {% endif %}
     </div>
-    {% endif %}
-</div>
 {% endfor %}
 {% endblock %}

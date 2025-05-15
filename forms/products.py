@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField
 from wtforms import StringField, TextAreaField
 from wtforms import SubmitField, FloatField, BooleanField
 from wtforms.fields.choices import SelectField, RadioField
@@ -26,3 +27,4 @@ class ProductForm(FlaskForm):
                                     default=('no_bm', 'Не стройматериал'), validators=[DataRequired()])
     tool = BooleanField("Инструмент")
     used = BooleanField('Б/У')
+    image = FileField('Изображение')

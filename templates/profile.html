@@ -5,6 +5,11 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
     <div class="profile-container">
         <h1>Личный кабинет</h1>
+        {% if current_user.role == "a" %}
+            <a href="/admin" class="btn btn-primary">
+            Перейти в админ панель
+        </a>
+        {% endif %}
         <h2>Имя: {{ current_user.name }}</h2>
         <h3>Город: {{ current_user.city }}</h3>
         <h4>Возраст: {{ current_user.age }}</h4>
@@ -16,6 +21,9 @@
         <div class="col-md6 border rounded">
             {% if current_user == item.user %}
             <h2>{{ item.title }}</h2>
+            {% if item.image_path %}
+            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.title }}" width="200">
+        {% endif %}
                 <div>
                     {{ item.content }}
                 </div>

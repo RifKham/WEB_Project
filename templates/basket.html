@@ -8,6 +8,9 @@
             {% for item in basket_items %}
                 <div class="col-md-12 border rounded mb-2">
                     <h2>{{ item.product.title }}</h2>
+                    {% if item.image_path %}
+            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.title }}" width="200">
+        {% endif %}
                     <div>
                         {{ item.product.price }}₽
                     </div>

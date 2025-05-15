@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Товары</h1>
+<div class="col-md6 border rounded">
+    <h2>{{ user.title }}</h2>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+    <div>
+        Имя: {{ user.name }}
+    </div>
+    <div>
+        Email: {{ user.email }}
+    </div>
+    <div>
+        Чтобы подтвердить бан пользователя, введите этот код: 123ban
+    </div>
+    <p>
+            {{ form.password_for_ban.label }}<br>
+            {{ form.password_for_ban(class="form-control", type="string") }}<br>
+            {% for error in form.password_for_ban.errors %}
+    <p class="alert alert-danger" role="alert">
+    {{ error }}
+</p>
+    {% endfor %}
+        </p>
+        <p>
+            {{ form.reason.label }}<br>
+            {{ form.reason(class="form-control", type="string") }}<br>
+            {% for error in form.reason.errors %}
+    <p class="alert alert-danger" role="alert">
+    {{ error }}
+</p>
+    {% endfor %}
+        </p>
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        {{message}}
+    </form>
+    </div>
+{% endblock %}
